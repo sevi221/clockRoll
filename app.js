@@ -44,7 +44,7 @@ app.use((req, res, next) => {
   res.locals.session = req.user || {};
   next();
 });
-// console.log(req.url)
+
 // Routes
 app.use('/alarm', alarmRoutes);
 app.use('/users', usersRoutes);
