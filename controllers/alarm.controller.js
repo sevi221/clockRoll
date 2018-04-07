@@ -10,7 +10,6 @@ module.exports.list = (req, res, next) => {
 
 module.exports.get = (req, res, next) => {
   const id = req.params.id;
-
     Alarm.find({ _id: id, ownerId: req.user._id })
       .then(alarm => {
         if (alarm) {
@@ -22,7 +21,8 @@ module.exports.get = (req, res, next) => {
 };
 
 module.exports.create = (req, res, next) => {
-  req.body.ownerId = req.user._id;
+req.body.ownerId = req.user._id;
+
   const alarm = new Alarm(req.body);
   alarm.save()
     .then(() => {
@@ -39,17 +39,29 @@ module.exports.create = (req, res, next) => {
 };
 
 module.exports.update = (req, res, next) => {
-  const id = req.params.id;
-  req.body.ownerId = req.user._id;
-    Alarm.findByIdAndUpdate(id, { $set: req.body }, { new: true })
-      .then(alarm => {
-        if (alarm) {
-          res.status(200).json(alarm)
-        } else {
-          next(new ApiError(`Alarm not set`, 404));
-        }
-      }).catch(error => next(error));
+  const alarmId = req.params.id;
+  const userId = req.user._id;
 
+  Alarm.findById(alarmId)
+    .then((alarm) => {
+      console.log(`alarm: ${alarm.ownerId} -- user: ${userId}`);
+      if (!alarm) {
+        res.status(404);
+        res.json({
+          message: 'Alarm not found'
+        })
+      }
+      Alarm.findByIdAndUpdate(alarmId, req.body, {new:true})
+      .then(alarmUpdated => {
+        if (alarmUpdated) {
+          res.status(200).json(alarmUpdated)
+        }
+        next(new ApiError(`Alarm not set`, 404));
+      }).catch(error => next(error));
+    })
+    .catch((error) => {
+      next(error)
+    })
 };
 
 module.exports.destroy = (req, res, next) => {
